@@ -1,8 +1,8 @@
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+﻿* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 body { background-color: #f1f5f9; color: #1e293b; }
 .sanamente-container { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
 .header { text-align: center; margin-bottom: 2rem; }
-.logo-box { font-size: 2.5rem; background: #e0f2fe; width: 60px; height: 60px; display: flex; align-items: center; justifyContent: center; border-radius: 50%; margin: 0 auto 0.5rem auto; }
+.logo-box { font-size: 2.5rem; background: #e0f2fe; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 0.5rem auto; }
 .header h1 { color: #0f172a; font-size: 2rem; }
 .header p { color: #64748b; font-size: 0.95rem; }
 .main-content { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 2rem; }
@@ -16,3 +16,10 @@ select, input { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border
 .module-card { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #1d4ed8; }
 .module-card h3 { font-size: 1.1rem; color: #1e293b; margin-bottom: 0.5rem; }
 .module-card p { font-size: 0.9rem; color: #64748b; }
+/* Estilos globales de la interfaz SanaMente */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.badge-sql { background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); }
+.badge-nosql { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); }
+

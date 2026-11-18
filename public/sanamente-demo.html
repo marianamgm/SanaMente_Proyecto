@@ -1,0 +1,1114 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SanaMente - Sistema Integral para Centros de Rehabilitación</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cobalt: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        teal: {
+                            50: '#f0fdf4',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col md:flex-row custom-scrollbar">
+
+    <!-- PANTALLA 1: MODAL / OVERLAY DE LOGIN (OBLIGATORIO AL INICIAR) -->
+    <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-200">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-tr from-cobalt-800 to-teal-600 rounded-2xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-3 shadow-lg">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold text-slate-900">SanaMente</h1>
+                <p class="text-xs text-slate-500 font-medium mt-1">Plataforma de Control Clínico & Administrativo</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Seleccionar Usuario de Prueba</label>
+                    <select id="login-user-select" onchange="autoFillLogin()" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-cobalt-600">
+                        <option value="admin">Dra. Claudia Morales (Administrador / Dirección)</option>
+                        <option value="medico">Dr. Roberto Silva (Médico Adictólogo)</option>
+                        <option value="psicologo">Lic. Mariana Ríos (Psicóloga Clínica)</option>
+                        <option value="tutor">Ing. Carlos Mendoza (Tutor / Familiar Responsable)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Correo Electrónico</label>
+                    <input type="email" id="login-email" value="c.morales@sanamente.org" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cobalt-600 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Contraseña</label>
+                    <input type="password" id="login-pass" value="••••••••" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cobalt-600 outline-none">
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-cobalt-800 to-teal-600 text-white rounded-xl text-sm font-bold shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>Iniciar Sesión en el Sistema</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- SIDEBAR PERSISTENTE -->
+    <aside id="sidebar" class="w-full md:w-72 bg-slate-900 text-white flex flex-col justify-between shrink-0 border-r border-slate-800 hidden md:flex">
+        <div>
+            <!-- LOGO HEADER -->
+            <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cobalt-600 to-teal-500 flex items-center justify-center text-white font-black text-xl shadow-md">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <div>
+                    <h2 class="font-extrabold text-white text-lg leading-tight">SanaMente</h2>
+                    <p class="text-xs text-teal-400 font-medium">Clínica & Seguimiento</p>
+                </div>
+            </div>
+
+            <!-- SELECTOR DINÁMICO DE ROL -->
+            <div class="p-4 bg-slate-800/60 border-b border-slate-800">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5"><i id="role-selector-icon" class="bi bi-person-gear mr-1"></i>Simulador de Rol Activo</label>
+                <select id="role-selector" onchange="changeRole(this.value)" class="w-full bg-slate-900 text-teal-300 text-xs border border-slate-700 rounded-lg px-2.5 py-2 font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500">
+                    <option value="Administrador">Rol: Administrador</option>
+                    <option value="Médico">Rol: Médico Especialista</option>
+                    <option value="Psicólogo">Rol: Psicólogo Clínico</option>
+                    <option value="Tutor">Rol: Tutor / Familiar</option>
+                </select>
+            </div>
+<!-- MENU DE NAVEGACIÓN (7 PANTALLAS) -->
+            <nav class="p-4 space-y-1">
+                <p class="px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">Módulos del Sistema</p>
+
+                <button onclick="navigateTo('screen-2')" id="nav-screen-2" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-users text-slate-400 w-5"></i>
+                    <span>2. Directores & Pacientes</span>
+                </button>
+
+                <button onclick="navigateTo('screen-3')" id="nav-screen-3" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-user-doctor text-slate-400 w-5"></i>
+                    <span>3. Especialistas y Personal</span>
+                </button>
+
+                <button onclick="navigateTo('screen-4')" id="nav-screen-4" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-file-contract text-cobalt-400 w-5"></i>
+                    <span>4. Internamiento & Contrato</span>
+                </button>
+
+                <button onclick="navigateTo('screen-5')" id="nav-screen-5" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-pen-to-square text-teal-400 w-5"></i>
+                    <span>5. Bitácoras y Notas Clínicas</span>
+                </button>
+
+                <button onclick="navigateTo('screen-6')" id="nav-screen-6" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-timeline text-teal-400 w-5"></i>
+                    <span>6. Historial & Timeline</span>
+                </button>
+
+                <button onclick="navigateTo('screen-7')" id="nav-screen-7" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-chart-line text-cobalt-400 w-5"></i>
+                    <span>7. Reportes & Cuotas</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- FOOTER DE USUARIO EN SIDEBAR -->
+        <div class="p-4 border-t border-slate-800 bg-slate-950/40">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div id="user-avatar" class="w-9 h-9 rounded-full bg-cobalt-700 text-white flex items-center justify-center font-bold text-xs shadow">
+                        CM
+                    </div>
+                    <div class="min-w-0">
+                        <p id="user-display-name" class="text-xs font-bold text-white truncate">Dra. Claudia Morales</p>
+                        <p id="user-display-role" class="text-[10px] text-teal-400 truncate">Administrador</p>
+                    </div>
+                </div>
+                <button onclick="logout()" title="Cerrar Sesión" class="text-slate-500 hover:text-rose-400 transition p-1">
+                    <i class="fa-solid fa-power-off text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="flex-1 flex flex-col min-h-screen overflow-y-auto custom-scrollbar">
+
+        <!-- HEADER SUPERIOR TOP-BAR -->
+        <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleMobileSidebar()" class="md:hidden text-slate-600 text-lg p-1">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div>
+                    <h2 id="current-screen-title" class="text-lg font-bold text-slate-900">Catálogo de Pacientes</h2>
+                    <p id="current-screen-desc" class="text-xs text-slate-500">Directorio interno de ingresos y estatus clínico</p>
+                </div>
+            </div>
+
+            <!-- BADGE TIPO DE ROL Y STATUS CONEXIÓN -->
+            <div class="flex items-center gap-3">
+                <span id="active-role-badge" class="px-3 py-1 bg-cobalt-50 text-cobalt-800 border border-cobalt-200 rounded-full text-xs font-semibold hidden sm:inline-block">
+                    <i id="active-role-icon" class="bi bi-person-gear mr-1"></i><span id="active-role-text">Rol Activo: Administrador</span>
+                </span>
+                <span class="flex items-center gap-1.5 text-xs text-emerald-600 font-medium bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Sistema en línea
+                </span>
+            </div>
+        </header>
+
+        <!-- CONTENEDOR DE PANTALLAS (SPA) -->
+        <div class="p-6 flex-1 space-y-6">
+
+            <!-- ========================================== -->
+            <!-- PANTALLA 2: CATÁLOGO DE PACIENTES -->
+            <!-- ========================================== -->
+            <section id="screen-2" class="screen-content space-y-6">
+
+                <!-- CONTROLES Y FILTROS -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
+                            <input type="text" id="patient-search" oninput="filterPatientsList()" placeholder="Buscar por Nombre o Tutor..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cobalt-600">
+                        </div>
+                        <select id="patient-status-filter" onchange="filterPatientsList()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium text-slate-700">
+                            <option value="">Todos los Estatus</option>
+                            <option value="En tratamiento">En tratamiento</option>
+                            <option value="En seguimiento">En seguimiento</option>
+                            <option value="Alta">Alta Médica</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="navigateTo('screen-4')" class="w-full md:w-auto px-4 py-2.5 bg-cobalt-800 hover:bg-cobalt-900 text-white rounded-xl text-xs font-bold shadow flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Nuevo Internamiento</span>
+                    </button>
+                </div>
+
+                <!-- GRIDA DE TARJETAS DE PACIENTES -->
+                <div id="patients-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Generado dinámicamente -->
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- PANTALLA 3: CATÁLOGO DE ESPECIALISTAS Y PERSONAL -->
+            <!-- ========================================== -->
+            <section id="screen-3" class="screen-content space-y-6 hidden">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="specialists-grid">
+                    <!-- Generado dinámicamente con JS -->
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- PANTALLA 4: GESTIÓN DE INTERNAMIENTO Y CONTRATO (SQL) -->
+            <!-- ========================================== -->
+            <section id="screen-4" class="screen-content space-y-6 hidden">
+
+                <!-- FORMULARIO DE INTERNAMIENTO -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto">
+                    <h3 class="text-base font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-file-signature text-cobalt-800"></i>
+                        <span>Registro de Nuevo Internamiento & Emisión de Contrato</span>
+                    </h3>
+
+                    <form onsubmit="processInternmentTransaction(event)" class="space-y-6">
+                        <!-- PASO 1: DATOS DEL PACIENTE -->
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-extrabold text-cobalt-800 uppercase tracking-wider">1. Datos Básicos del Paciente</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo del Paciente *</label>
+                                    <input type="text" id="sql-patient-name" required placeholder="Ej. Rodrigo Fernández" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cobalt-600 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Fecha de Nacimiento *</label>
+                                    <input type="date" id="sql-patient-dob" required value="1995-06-12" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cobalt-600 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PASO 2: VÍNCULO CON TUTOR LEGAL (FK) -->
+                        <div class="space-y-4 pt-4 border-t border-slate-100">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-extrabold text-cobalt-800 uppercase tracking-wider">2. Tutor Responsable Legal</h4>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Seleccionar Tutor Registrado *</label>
+                                    <select id="sql-tutor-select" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cobalt-600 outline-none">
+                                        <option value="4">Ing. Carlos Mendoza (Tutor ID: 4)</option>
+                                        <option value="5">Sra. Beatriz Juárez (Tutor ID: 5)</option>
+                                        <option value="6">Lic. Fernando Castro (Tutor ID: 6)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Parentesco / Relación Legal *</label>
+                                    <input type="text" id="sql-tutor-relation" value="Padre / Tutor Legal" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cobalt-600 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PASO 3: TRATAMIENTO Y CONTRATO -->
+                        <div class="space-y-4 pt-4 border-t border-slate-100">
+                            <h4 class="text-xs font-extrabold text-cobalt-800 uppercase tracking-wider">3. Condiciones del Tratamiento y Estado Legal</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tipo de Tratamiento *</label>
+                                    <select id="sql-treatment-type" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cobalt-600 outline-none">
+                                        <option value="Residencial Intensivo 90 días">Residencial Intensivo 90 días</option>
+                                        <option value="Desintoxicación Médica 30 días">Desintoxicación Médica 30 días</option>
+                                        <option value="Ambulatorio de Reintegración">Ambulatorio de Reintegración</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Fecha Estimada de Alta *</label>
+                                    <input type="date" id="sql-release-date" value="2026-05-30" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cobalt-600 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Monto Cuota de Recuperación ($) *</label>
+                                    <input type="number" id="sql-fee-amount" value="12500" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cobalt-600 outline-none">
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" required checked class="mt-1 rounded text-cobalt-800 focus:ring-cobalt-600">
+                                    <span class="text-xs text-slate-600 leading-relaxed">Aceptación formal del <strong>Contrato de Compromiso de Internamiento</strong>, consentimiento informado para intervención médica y compromiso de pago de cuotas bajo normatividad vigente.</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-100 flex items-center justify-end">
+                            <button type="submit" class="px-6 py-3 bg-gradient-to-r from-cobalt-800 to-teal-700 text-white font-bold rounded-xl text-xs shadow-lg hover:opacity-90 transition flex items-center gap-2">
+                                <i class="fa-solid fa-check-double"></i>
+                                <span>Registrar internamiento y emitir pago</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- PANTALLA 5: REGISTRO DE BITÁCORA Y NOTAS CLÍNICAS (NOSQL) -->
+            <!-- ========================================== -->
+            <section id="screen-5" class="screen-content space-y-6 hidden">
+
+                <!-- FORMULARIO DE NOTAS CLÍNICAS -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-6">
+                    <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Registro Diario de Evolución Clínica</h3>
+                            <p class="text-xs text-slate-500">Historial psicológico y médico del paciente</p>
+                        </div>
+                    </div>
+
+                    <form onsubmit="saveNoSQLLog(event)" class="space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Seleccionar Paciente *</label>
+                                <select id="nosql-patient-select" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none">
+                                    <option value="1">Carlos Mendoza (Sustancia: Alcohol / Ansiolíticos)</option>
+                                    <option value="2">Laura Gómez (Sustancia: Metanfetaminas)</option>
+                                    <option value="3">Fernando Rincón (Sustancia: Opioides)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Nivel de Ansiedad Registrado (Escala 1-10) *</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="range" id="nosql-anxiety-range" min="1" max="10" value="4" oninput="document.getElementById('anxiety-val').innerText = this.value" class="w-full accent-teal-600">
+                                    <span id="anxiety-val" class="font-bold text-teal-700 text-lg w-6 text-center">4</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MEDICAMENTOS ADMINISTRADOS (ARRAY DINÁMICO) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Medicamentos administrados hoy</label>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="nosql-med-input" placeholder="Ej. Diazepam 10mg - Cada 12 hrs" class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none">
+                                <button type="button" onclick="addMedicationTag()" class="px-4 py-2 bg-teal-600 text-white text-xs font-bold rounded-xl hover:bg-teal-700">Agregar</button>
+                            </div>
+                            <div id="meds-tags-container" class="flex flex-wrap gap-2">
+                                <span class="bg-teal-50 text-teal-800 text-xs px-2.5 py-1 rounded-lg border border-teal-200 flex items-center gap-2">
+                                    Sertralina 50mg <i class="fa-solid fa-xmark cursor-pointer" onclick="this.parentElement.remove()"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- NOTAS GRUPALES Y CRISIS -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Notas de Terapia Grupal / Individual</label>
+                                <textarea id="nosql-therapy-notes" rows="3" placeholder="Paciente muestra mayor apertura sobre factores desencadenantes..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-600"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Observaciones de Crisis / Abstinencia (Opcional)</label>
+                                <textarea id="nosql-crisis-notes" rows="3" placeholder="Sin episodios agresivos. Sudoración leve por la madrugada..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-600"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- DEMO DE ESQUEMA FLEXIBLE: AGREGAR CAMPO DINÁMICO -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider"><i class="fa-solid fa-code text-teal-600"></i> Agregar observación personalizada</span>
+                                <button type="button" onclick="addCustomNoSQLField()" class="text-xs text-teal-700 font-bold hover:underline">+ Campo Ad-hoc</button>
+                            </div>
+                            <div id="custom-fields-container" class="space-y-2">
+                                <!-- Campos dinámicos agregados -->
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-3">
+                            <button type="submit" class="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2">
+                                <i class="fa-solid fa-database"></i>
+                                <span>Guardar nota clínica</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+<!-- ========================================== -->
+            <!-- PANTALLA 6: HISTORIAL CLÍNICO Y LÍNEA DEL TIEMPO -->
+            <!-- ========================================== -->
+            <section id="screen-6" class="screen-content space-y-6 hidden">
+
+                <!-- SELECTOR DE PACIENTE PARA EXPEDIENTE -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <span class="text-xs font-bold text-slate-600 shrink-0">Seleccionar Paciente:</span>
+                        <select id="timeline-patient-select" onchange="loadPatientTimeline(this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 w-full">
+                            <option value="1">Carlos Mendoza — Folio #FOL-101</option>
+                            <option value="2">Laura Gómez — Folio #FOL-102</option>
+                            <option value="3">Fernando Rincón — Folio #FOL-103</option>
+                        </select>
+                    </div>
+                    <span class="text-xs text-slate-400 italic">Historial de evoluciones del paciente</span>
+                </div>
+
+                <!-- RESUMEN DEL EXPEDIENTE NOSQL -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- ANTECEDENTES Y SUSTANCIAS -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-xs font-extrabold text-teal-700 uppercase tracking-wider border-b border-slate-100 pb-2">Antecedentes & Consumo</h4>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Sustancias de consumo:</p>
+                            <div id="timeline-substances" class="flex flex-wrap gap-1.5 mt-1">
+                                <!-- Dinámico -->
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Padecimientos & Alergias:</p>
+                            <div id="timeline-conditions" class="text-xs text-slate-700 mt-1 font-medium space-y-1">
+                                <!-- Dinámico -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PLAN DE TRATAMIENTO POR FASES -->
+                    <div class="md:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-xs font-extrabold text-teal-700 uppercase tracking-wider border-b border-slate-100 pb-2">Plan de Tratamiento Personalizado (Fases Array)</h4>
+                        <div id="timeline-treatment-phases" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <!-- Dinámico -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LÍNEA DEL TIEMPO (TIMELINE DE BITÁCORAS) -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                    <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-stream text-teal-600"></i>
+                        <span>Línea del Tiempo de Bitácoras de Evolución</span>
+                    </h4>
+
+                    <div id="timeline-logs-container" class="relative pl-6 border-l-2 border-teal-100 space-y-6">
+                        <!-- Items de Timeline generados por JS -->
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- PANTALLA 7: REPORTES ADMINISTRATIVOS Y FINANCIEROS (SQL) -->
+            <!-- ========================================== -->
+            <section id="screen-7" class="screen-content space-y-6 hidden">
+
+                <!-- KPIS FINANCIEROS Y OPERATIVOS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Recaudado (Cuotas)</p>
+                        <h3 id="kpi-total-revenue" class="text-2xl font-black text-slate-900 mt-1">$62,500 MXN</h3>
+                        <p class="text-xs text-emerald-600 font-medium mt-1"><i class="fa-solid fa-arrow-up"></i> Pagos conciliados</p>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cuotas Pendientes de Cobro</p>
+                        <h3 id="kpi-pending-revenue" class="text-2xl font-black text-amber-600 mt-1">$25,000 MXN</h3>
+                        <p class="text-xs text-amber-600 font-medium mt-1">2 Tutores pendientes</p>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ocupación de Camas</p>
+                        <h3 class="text-2xl font-black text-cobalt-800 mt-1">85%</h3>
+                        <p class="text-xs text-slate-500 font-medium mt-1">17 de 20 Camas ocupadas</p>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasa de Deserción vs Alta</p>
+                        <h3 class="text-2xl font-black text-teal-700 mt-1">4.2%</h3>
+                        <p class="text-xs text-emerald-600 font-medium mt-1"><i class="fa-solid fa-check"></i> Bajo el estándar nacional</p>
+                    </div>
+                </div>
+
+                <!-- GRÁFICOS DE CHART.JS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <h4 class="font-bold text-slate-800 text-sm mb-4">Ocupación por tipo de tratamiento</h4>
+                        <div class="h-64 relative">
+                            <canvas id="occupancyChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <h4 class="font-bold text-slate-800 text-sm mb-4">Estado de Pagos de Cuotas por Tutor</h4>
+                        <div class="h-64 relative">
+                            <canvas id="paymentsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLA DESGLOSE DE PAGOS_CUOTAS -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-3">
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                        <h4 class="font-bold text-slate-800 text-sm">
+Pagos de cuotas</h4>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-bold tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-3">ID Pago</th>
+                                    <th class="px-6 py-3">Paciente & Tutor</th>
+                                    <th class="px-6 py-3">Monto</th>
+                                    <th class="px-6 py-3">Fecha Límite</th>
+                                    <th class="px-6 py-3">Estatus</th>
+                                    <th class="px-6 py-3 text-right">Acción Simulación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payments-table-body" class="divide-y divide-slate-100">
+                                <!-- Filas JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- TOAST NOTIFICACIÓN -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-teal-400"></i>
+        <span id="toast-message">Acción completada</span>
+    </div>
+
+    <!-- LOGICA JAVASCRIPT GLOBAL Y ESTADO SIMULADO -->
+    <script>
+        // ESTADO GLOBAL DE DATOS (SIMULACIÓN BD RELACIONAL Y NOSQL)
+        const mockData = {
+            users: [
+                { id: 1, name: "Dra. Claudia Morales", email: "c.morales@sanamente.org", role: "Administrador", spec: "Dirección Médica", shift: "Completo" },
+                { id: 2, name: "Dr. Roberto Silva", email: "r.silva@sanamente.org", role: "Médico", spec: "Adictología y Psiquiatría", shift: "Matutino" },
+                { id: 3, name: "Lic. Mariana Ríos", email: "m.rios@sanamente.org", role: "Psicólogo", spec: "Psicoterapia Cognitivo-Conductual", shift: "Vespertino" },
+                { id: 4, name: "Ing. Carlos Mendoza", email: "carlos.mendoza@gmail.com", role: "Tutor", spec: "Tutor de Carlos Mendoza Jr.", shift: "N/A" },
+                { id: 5, name: "Sra. Beatriz Juárez", email: "b.juarez@outlook.com", role: "Tutor", spec: "Tutor de Laura Gómez", shift: "N/A" }
+            ],
+
+            // TABLA SQL: PACIENTES
+            patients: [
+                { id: 1, name: "Carlos Mendoza Jr.", dob: "1998-04-12", tutorId: 4, tutorName: "Ing. Carlos Mendoza", status: "En tratamiento", addiction: "Alcohol / Ansiolíticos", bed: "Cama 04", date: "2026-01-10" },
+                { id: 2, name: "Laura Gómez", dob: "2001-09-23", tutorId: 5, tutorName: "Sra. Beatriz Juárez", status: "En tratamiento", addiction: "Metanfetaminas", bed: "Cama 12", date: "2026-02-01" },
+                { id: 3, name: "Fernando Rincón", dob: "1989-11-05", tutorId: 6, tutorName: "Lic. Fernando Castro", status: "Alta", addiction: "Opioides", bed: "Ambulatorio", date: "2025-09-15" }
+            ],
+
+            // TABLA SQL: PAGOS_CUOTAS
+            payments: [
+                { id: 101, patientName: "Carlos Mendoza Jr.", tutorName: "Ing. Carlos Mendoza", amount: 12500, dueDate: "2026-02-15", status: "Pagado", method: "Transferencia" },
+                { id: 102, patientName: "Laura Gómez", tutorName: "Sra. Beatriz Juárez", amount: 12500, dueDate: "2026-03-01", status: "Pendiente", method: "Tarjeta Débito" },
+                { id: 103, patientName: "Carlos Mendoza Jr.", tutorName: "Ing. Carlos Mendoza", amount: 12500, dueDate: "2026-03-15", status: "Pendiente", method: "Efectivo" }
+            ],
+
+            // COLECCIÓN NOSQL: EXPEDIENTES_CLINICOS (POR PACIENTE)
+            clinicalRecords: {
+                1: {
+                    substances: ["Alcohol", "Alprazolam"],
+                    conditions: ["Gastritis crónica", "Sin alergias a medicamentos"],
+                    phases: [
+                        { name: "Fase 1: Desintoxicación", status: "Completada", progress: "100%" },
+                        { name: "Fase 2: Terapia Cognitiva", status: "En proceso", progress: "60%" },
+                        { name: "Fase 3: Reinserción", status: "Pendiente", progress: "0%" }
+                    ],
+                    logs: [
+                        { date: "2026-02-28 09:30 AM", doctor: "Lic. Mariana Ríos", anxiety: 4, meds: ["Sertralina 50mg"], notes: "Buena integración en dinámica grupal sobre manejo de la ira.", crisis: "Sin eventualidades." },
+                        { date: "2026-02-25 04:00 PM", doctor: "Dr. Roberto Silva", anxiety: 7, meds: ["Diazepam 5mg", "Sertralina 50mg"], notes: "Refiere craving moderado durante la tarde.", crisis: "Controlado mediante ejercicios de respiración guiada." }
+                    ]
+                },
+                2: {
+                    substances: ["Metanfetaminas"],
+                    conditions: ["Insomnio severo", "Alergia a la Penicilina"],
+                    phases: [
+                        { name: "Fase 1: Estabilización Psiquiátrica", status: "En proceso", progress: "40%" },
+                        { name: "Fase 2: Rehabilitación Física", status: "Pendiente", progress: "0%" },
+                        { name: "Fase 3: Apoyo Familiar", status: "Pendiente", progress: "0%" }
+                    ],
+                    logs: [
+                        { date: "2026-02-27 11:00 AM", doctor: "Dr. Roberto Silva", anxiety: 8, meds: ["Olanzapina 5mg"], notes: "Monitoreo constante por alteración de sueño.", crisis: "Episodio de ansiedad leve por la madrugada." }
+                    ]
+                },
+                3: {
+                    substances: ["Fentanilo / Opioides"],
+                    conditions: ["Episodios depresivos previos"],
+                    phases: [
+                        { name: "Fase 1", status: "Completada", progress: "100%" },
+                        { name: "Fase 2", status: "Completada", progress: "100%" },
+                        { name: "Fase 3: Seguimiento Externo", status: "En proceso", progress: "90%" }
+                    ],
+                    logs: [
+                        { date: "2026-01-15 10:00 AM", doctor: "Lic. Mariana Ríos", anxiety: 2, meds: ["Ninguno"], notes: "Paciente dado de alta acude a su consulta de mantenimiento mensual.", crisis: "Ninguna." }
+                    ]
+                }
+            }
+        };
+
+        let activeRole = "Administrador";
+        let chartOccupancy = null;
+        let chartPayments = null;
+
+        // INICIALIZACIÓN DE LA APLICACIÓN
+        window.onload = function() {
+            renderPatientsGrid();
+            renderSpecialistsGrid();
+            renderPaymentsTable();
+            initCharts();
+            loadPatientTimeline(1);
+        };
+
+        // --- MANEJO DE AUTENTICACIÓN (PANTALLA 1) ---
+        function autoFillLogin() {
+            const val = document.getElementById('login-user-select').value;
+            const emailInput = document.getElementById('login-email');
+            
+            if(val === 'admin') emailInput.value = "c.morales@sanamente.org";
+            if(val === 'medico') emailInput.value = "r.silva@sanamente.org";
+            if(val === 'psicologo') emailInput.value = "m.rios@sanamente.org";
+            if(val === 'tutor') emailInput.value = "carlos.mendoza@gmail.com";
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const val = document.getElementById('login-user-select').value;
+            
+            if(val === 'admin') { activeRole = "Administrador"; updateUserInfo("Dra. Claudia Morales", "Administrador", "CM"); }
+            if(val === 'medico') { activeRole = "Médico"; updateUserInfo("Dr. Roberto Silva", "Médico Adictólogo", "RS"); }
+            if(val === 'psicologo') { activeRole = "Psicólogo"; updateUserInfo("Lic. Mariana Ríos", "Psicóloga Clínica", "MR"); }
+            if(val === 'tutor') { activeRole = "Tutor"; updateUserInfo("Ing. Carlos Mendoza", "Tutor Familiar", "CM"); }
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('role-selector').value = activeRole;
+            applyRolePermissions();
+            showToast(`Bienvenido/a. Sesión iniciada con rol de ${activeRole}`);
+            navigateTo('screen-2');
+        }
+
+        function logout() {
+            document.getElementById('login-screen').classList.remove('hidden');
+        }
+
+        function changeRole(newRole) {
+            activeRole = newRole;
+            applyRolePermissions();
+            showToast(`Simulador: Cambiado a Rol de ${activeRole}`);
+        }
+
+        function updateRoleVisuals(role) {
+            const roleIcons = {
+                "Administrador": "bi-person-gear",
+                "Médico": "bi-heart-pulse",
+                "Psicólogo": "bi-brain",
+                "Tutor": "bi-people"
+            };
+            const iconClass = roleIcons[role] || "bi-person-badge";
+            document.getElementById('role-selector-icon').className = `bi ${iconClass} mr-1`;
+            document.getElementById('active-role-icon').className = `bi ${iconClass} mr-1`;
+            document.getElementById('active-role-text').innerText = `Rol Activo: ${role}`;
+        }
+        function updateUserInfo(name, role, initials) {
+            document.getElementById('user-display-name').innerText = name;
+            document.getElementById('user-display-role').innerText = role;
+            document.getElementById('user-avatar').innerText = initials;
+            updateRoleVisuals(role);
+        }
+
+        function applyRolePermissions() {
+            updateRoleVisuals(activeRole);
+        }
+
+        // --- NAVEGACIÓN SPA ---
+        function navigateTo(screenId) {
+            // Ocultar todas las pantallas
+            document.querySelectorAll('.screen-content').forEach(s => s.classList.add('hidden'));
+            
+            // Mostrar seleccionada
+            const target = document.getElementById(screenId);
+            if(target) target.classList.remove('hidden');
+
+            // Actualizar botones del sidebar
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-white');
+                btn.classList.add('text-slate-300');
+            });
+            const activeBtn = document.getElementById(`nav-${screenId}`);
+            if(activeBtn) {
+                activeBtn.classList.add('bg-slate-800', 'text-white');
+            }
+
+            // Actualizar títulos
+            const titles = {
+                'screen-2': ['Catálogo de Pacientes (Directorio Interno)', 'Visión global de ingresos y estatus clínico'],
+                'screen-3': ['Catálogo de Especialistas y Personal', 'Directorio del equipo multidisciplinario'],
+                'screen-4': ['Gestión de Internamiento', 'Registro del paciente, tutor y cuota'],
+                'screen-5': ['Bitácora y Notas Clínicas', 'Registro de evolución y observaciones clínicas'],
+                'screen-6': ['Historial Clínico y Línea del Tiempo', 'Antecedentes y evoluciones del paciente'],
+                'screen-7': ['Reportes Administrativos y Financieros', 'Resumen de cuotas, ocupación y pagos']
+            };
+
+            if(titles[screenId]) {
+                document.getElementById('current-screen-title').innerText = titles[screenId][0];
+                document.getElementById('current-screen-desc').innerText = titles[screenId][1];
+            }
+        }
+
+        function toggleMobileSidebar() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        }
+
+        // --- PANTALLA 2: RENDER PACIENTES ---
+        function renderPatientsGrid() {
+            const grid = document.getElementById('patients-grid');
+            grid.innerHTML = '';
+
+            mockData.patients.forEach(p => {
+                let badgeClass = "bg-teal-50 text-teal-700 border-teal-200";
+                if(p.status === 'Alta') badgeClass = "bg-blue-50 text-blue-700 border-blue-200";
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] font-mono bg-slate-100 text-slate-500 px-2 py-0.5 rounded">ID: #${p.id}</span>
+                            <span class="text-xs px-2.5 py-0.5 rounded-full font-bold border ${badgeClass}">${p.status}</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-base mb-1">${p.name}</h4>
+                        <p class="text-xs text-slate-500 mb-3"><i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> Adicción: <strong>${p.addiction}</strong></p>
+                        
+                        <div class="text-xs space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <p class="text-slate-600"><strong>Tutor Legal:</strong> ${p.tutorName}</p>
+                            <p class="text-slate-600"><strong>Ubicación/Cama:</strong> ${p.bed}</p>
+                            <p class="text-slate-600"><strong>Ingreso:</strong> ${p.date}</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 flex gap-2">
+                        <button onclick="navigateTo('screen-6'); loadPatientTimeline(${p.id});" class="flex-1 py-2 bg-teal-50 hover:bg-teal-600 hover:text-white text-teal-700 text-xs font-bold rounded-xl transition text-center">
+                            Ver Expediente
+                        </button>
+                        <button onclick="navigateTo('screen-5')" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                            + Bitácora
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterPatientsList() {
+            const query = document.getElementById('patient-search').value.toLowerCase();
+            const statusFilter = document.getElementById('patient-status-filter').value;
+
+            const cards = document.getElementById('patients-grid').children;
+            let i = 0;
+            mockData.patients.forEach(p => {
+                const matchesName = p.name.toLowerCase().includes(query) || p.tutorName.toLowerCase().includes(query);
+                const matchesStatus = statusFilter === '' || p.status === statusFilter;
+
+                if(cards[i]) {
+                    cards[i].style.display = (matchesName && matchesStatus) ? 'flex' : 'none';
+                }
+                i++;
+            });
+        }
+
+        // --- PANTALLA 3: RENDER ESPECIALISTAS ---
+        function renderSpecialistsGrid() {
+            const container = document.getElementById('specialists-grid');
+            container.innerHTML = '';
+
+            mockData.users.filter(u => u.role !== 'Tutor').forEach(spec => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4";
+                card.innerHTML = `
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cobalt-800 to-teal-600 text-white flex items-center justify-center font-extrabold text-lg shadow-md shrink-0">
+                        ${spec.name.split(' ').map(n=>n[0]).join('').substring(0,2)}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <span class="text-[10px] bg-cobalt-50 text-cobalt-800 font-bold px-2 py-0.5 rounded border border-cobalt-200">${spec.role}</span>
+                        <h4 class="font-bold text-slate-900 text-sm mt-1 truncate">${spec.name}</h4>
+                        <p class="text-xs text-slate-500 truncate">${spec.spec}</p>
+                        <p class="text-[10px] text-slate-400 mt-1"><i class="fa-solid fa-clock mr-1"></i> Turno: ${spec.shift}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- PANTALLA 4: PROCESO TRANSACCIONAL SQL ---
+        function processInternmentTransaction(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('sql-patient-name').value;
+            const dob = document.getElementById('sql-patient-dob').value;
+            const tutorSelect = document.getElementById('sql-tutor-select');
+            const tutorId = parseInt(tutorSelect.value);
+            const tutorName = tutorSelect.options[tutorSelect.selectedIndex].text.split('(')[0].trim();
+            const treatment = document.getElementById('sql-treatment-type').value;
+            const amount = parseFloat(document.getElementById('sql-fee-amount').value);
+
+            // SIMULAR INSERCIÓN EN TABLA PACIENTES
+            const newId = mockData.patients.length + 1;
+            const newPatient = {
+                id: newId,
+                name: name,
+                dob: dob,
+                tutorId: tutorId,
+                tutorName: tutorName,
+                status: "En tratamiento",
+                addiction: treatment,
+                bed: `Cama ${15 + newId}`,
+                date: new Date().toISOString().split('T')[0]
+            };
+            mockData.patients.push(newPatient);
+
+            // SIMULAR INSERCIÓN EN TABLA PAGOS_CUOTAS
+            mockData.payments.push({
+                id: 100 + mockData.payments.length + 1,
+                patientName: name,
+                tutorName: tutorName,
+                amount: amount,
+                dueDate: document.getElementById('sql-release-date').value,
+                status: "Pendiente",
+                method: "Suscripción Contrato"
+            });
+
+            // SIMULAR EXPEDIENTE VACÍO EN NOSQL
+            mockData.clinicalRecords[newId] = {
+                substances: [treatment],
+                conditions: ["Evaluación de ingreso reciente"],
+                phases: [
+                    { name: "Fase 1: Desintoxicación", status: "En proceso", progress: "10%" },
+                    { name: "Fase 2: Psicoterapia", status: "Pendiente", progress: "0%" }
+                ],
+                logs: []
+            };
+
+            renderPatientsGrid();
+            renderPaymentsTable();
+            updateChartsData();
+
+            showToast(` Internamiento registrado. Contrato activado y pago emitido.`);
+            navigateTo('screen-2');
+        }
+
+        // --- PANTALLA 5: REGISTRO NOSQL FLEXIBLE ---
+        function addMedicationTag() {
+            const input = document.getElementById('nosql-med-input');
+            const val = input.value.trim();
+            if(!val) return;
+
+            const container = document.getElementById('meds-tags-container');
+            const tag = document.createElement('span');
+            tag.className = "bg-teal-50 text-teal-800 text-xs px-2.5 py-1 rounded-lg border border-teal-200 flex items-center gap-2";
+            tag.innerHTML = `${val} <i class="fa-solid fa-xmark cursor-pointer" onclick="this.parentElement.remove()"></i>`;
+            container.appendChild(tag);
+            input.value = '';
+        }
+
+        function addCustomNoSQLField() {
+            const container = document.getElementById('custom-fields-container');
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center";
+            div.innerHTML = `
+                <input type="text" placeholder="Clave (ej. horas_sueño)" class="w-1/3 px-3 py-1.5 border border-slate-200 rounded-lg text-xs outline-none">
+                <input type="text" placeholder="Valor (ej. 6.5 hrs)" class="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs outline-none">
+                <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 p-1"><i class="fa-solid fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function saveNoSQLLog(e) {
+            e.preventDefault();
+            const patientId = document.getElementById('nosql-patient-select').value;
+            const anxiety = document.getElementById('nosql-anxiety-range').value;
+            const therapy = document.getElementById('nosql-therapy-notes').value || "Sin notas de terapia.";
+            const crisis = document.getElementById('nosql-crisis-notes').value || "Sin crisis reportadas.";
+
+            // Extraer medicamentos
+            const meds = [];
+            document.querySelectorAll('#meds-tags-container span').forEach(el => {
+                meds.push(el.innerText.trim());
+            });
+
+            const newLog = {
+                date: new Date().toLocaleString(),
+                doctor: activeRole.includes('Médico') ? "Dr. Roberto Silva" : "Lic. Mariana Ríos",
+                anxiety: parseInt(anxiety),
+                meds: meds.length ? meds : ["Ninguno"],
+                notes: therapy,
+                crisis: crisis
+            };
+
+            if(!mockData.clinicalRecords[patientId]) {
+                mockData.clinicalRecords[patientId] = { substances: [], conditions: [], phases: [], logs: [] };
+            }
+
+            mockData.clinicalRecords[patientId].logs.unshift(newLog);
+            showToast("Nota clínica guardada correctamente.");
+            
+            // Redireccionar al historial
+            navigateTo('screen-6');
+            document.getElementById('timeline-patient-select').value = patientId;
+            loadPatientTimeline(patientId);
+        }
+
+        // --- PANTALLA 6: CARGAR TIMELINE NOSQL ---
+        function loadPatientTimeline(patientId) {
+            const record = mockData.clinicalRecords[patientId] || { substances: [], conditions: [], phases: [], logs: [] };
+
+            // Sustancias
+            const substContainer = document.getElementById('timeline-substances');
+            substContainer.innerHTML = record.substances.map(s => `<span class="bg-teal-50 text-teal-800 border border-teal-200 text-[11px] px-2 py-0.5 rounded-full font-medium">${s}</span>`).join('') || '<span class="text-xs text-slate-400">Ninguna registrada</span>';
+
+            // Antecedentes
+            const condContainer = document.getElementById('timeline-conditions');
+            condContainer.innerHTML = record.conditions.map(c => `<p><i class="fa-solid fa-angle-right text-teal-600 mr-1"></i>${c}</p>`).join('') || '<p class="text-slate-400">Sin antecedentes</p>';
+
+            // Fases
+            const phasesContainer = document.getElementById('timeline-treatment-phases');
+            phasesContainer.innerHTML = record.phases.map(f => `
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+                    <p class="font-bold text-slate-800">${f.name}</p>
+                    <p class="text-[10px] text-teal-700 font-medium mt-1">${f.status} (${f.progress})</p>
+                </div>
+            `).join('') || '<p class="text-xs text-slate-400">Sin fases asignadas</p>';
+
+            // Timeline Logs
+            const logsContainer = document.getElementById('timeline-logs-container');
+            logsContainer.innerHTML = '';
+
+            if(record.logs.length === 0) {
+                logsContainer.innerHTML = `<p class="text-xs text-slate-400 italic">No hay bitácoras registradas para este paciente.</p>`;
+                return;
+            }
+
+            record.logs.forEach(log => {
+                const item = document.createElement('div');
+                item.className = "relative group";
+                item.innerHTML = `
+                    <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-teal-600 border-4 border-white shadow"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-800">${log.doctor}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">${log.date}</span>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="text-xs font-semibold text-slate-600">Nivel Ansiedad:</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-800">${log.anxiety} / 10</span>
+                        </div>
+                        <p class="text-xs text-slate-600"><strong>Notas Terapia:</strong> ${log.notes}</p>
+                        <p class="text-xs text-slate-500"><strong>Medicamentos:</strong> ${log.meds.join(', ')}</p>
+                        <p class="text-xs text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-100"><strong>Crisis / Observación:</strong> ${log.crisis}</p>
+                    </div>
+                `;
+                logsContainer.appendChild(item);
+            });
+        }
+
+        // --- PANTALLA 7: TABLA DE PAGOS Y SIMULACIÓN ---
+        function renderPaymentsTable() {
+            const tbody = document.getElementById('payments-table-body');
+            tbody.innerHTML = '';
+
+            let totalRecaudado = 0;
+            let totalPendiente = 0;
+
+            mockData.payments.forEach(p => {
+                if(p.status === 'Pagado') totalRecaudado += p.amount;
+                if(p.status === 'Pendiente') totalPendiente += p.amount;
+
+                const statusBadge = p.status === 'Pagado' 
+                    ? `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">Pagado</span>`
+                    : `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-bold">Pendiente</span>`;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="px-6 py-3 font-mono font-bold text-slate-700">#PAG-${p.id}</td>
+                    <td class="px-6 py-3">
+                        <div class="font-bold text-slate-800">${p.patientName}</div>
+                        <div class="text-[10px] text-slate-400">Tutor: ${p.tutorName}</div>
+                    </td>
+                    <td class="px-6 py-3 font-bold text-slate-800">$${p.amount.toLocaleString()} MXN</td>
+                    <td class="px-6 py-3 text-slate-500">${p.dueDate}</td>
+                    <td class="px-6 py-3">${statusBadge}</td>
+                    <td class="px-6 py-3 text-right">
+                        ${p.status === 'Pendiente' ? `<button onclick="simulatePayment(${p.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold">Registrar Pago</button>` : `<span class="text-slate-400 text-[10px]"><i class="fa-solid fa-check"></i> Conciliado</span>`}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('kpi-total-revenue').innerText = `$${totalRecaudado.toLocaleString()} MXN`;
+            document.getElementById('kpi-pending-revenue').innerText = `$${totalPendiente.toLocaleString()} MXN`;
+        }
+
+        function simulatePayment(paymentId) {
+            const p = mockData.payments.find(item => item.id === paymentId);
+            if(p) {
+                p.status = 'Pagado';
+                renderPaymentsTable();
+                updateChartsData();
+                showToast(`Pago #PAG-${paymentId} registrado correctamente.`);
+            }
+        }
+
+        // --- CHART.JS INICIALIZACIÓN Y UPDATE ---
+        function initCharts() {
+            // Ocupación
+            const ctx1 = document.getElementById('occupancyChart').getContext('2d');
+            chartOccupancy = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Residencial Intensivo', 'Desintoxicación Médica', 'Ambulatorio'],
+                    datasets: [{
+                        data: [10, 5, 2],
+                        backgroundColor: ['#1e40af', '#0d9488', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // Pagos
+            const ctx2 = document.getElementById('paymentsChart').getContext('2d');
+            chartPayments = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Ing. Carlos Mendoza', 'Sra. Beatriz Juárez', 'Lic. Fernando Castro'],
+                    datasets: [{
+                        label: 'Cuotas Conciliadas ($)',
+                        data: [12500, 0, 12500],
+                        backgroundColor: '#0d9488'
+                    }, {
+                        label: 'Cuotas Pendientes ($)',
+                        data: [12500, 12500, 0],
+                        backgroundColor: '#f59e0b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function updateChartsData() {
+            if(chartPayments) {
+                // Actualizar aleatoriamente para reflejar los cambios
+                chartPayments.data.datasets[0].data = [25000, 0, 12500];
+                chartPayments.data.datasets[1].data = [0, 12500, 0];
+                chartPayments.update();
+            }
+        }
+
+        // --- TOAST NOTIFICATION HELPER ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
