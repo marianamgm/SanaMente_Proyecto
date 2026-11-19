@@ -125,11 +125,11 @@
             </div>
 <!-- MENU DE NAVEGACIÓN (7 PANTALLAS) -->
             <nav class="p-4 space-y-1">
-                <p class="px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">Módulos del Sistema</p>
+                <p id="nav-heading" class="px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">Módulos del Sistema</p>
 
                 <button onclick="navigateTo('screen-2')" id="nav-screen-2" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
                     <i class="fa-solid fa-users text-slate-400 w-5"></i>
-                    <span>2. Directores & Pacientes</span>
+                    <span>2. Directorio de Pacientes</span>
                 </button>
 
                 <button onclick="navigateTo('screen-3')" id="nav-screen-3" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
@@ -155,6 +155,11 @@
                 <button onclick="navigateTo('screen-7')" id="nav-screen-7" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
                     <i class="fa-solid fa-chart-line text-cobalt-400 w-5"></i>
                     <span>7. Reportes & Cuotas</span>
+                </button>
+
+                <button onclick="navigateTo('screen-8')" id="nav-screen-8" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white hidden">
+                    <i class="fa-solid fa-house-user text-teal-400 w-5"></i>
+                    <span>Mi familiar</span>
                 </button>
             </nav>
         </div>
@@ -557,6 +562,13 @@ Pagos de cuotas</h4>
                 </div>
             </section>
 
+            <!-- PORTAL FAMILIAR: INFORMACIÓN DEL PACIENTE VINCULADO Y SUS CUOTAS -->
+            <section id="screen-8" class="screen-content space-y-6 hidden">
+                <div id="family-dashboard" class="space-y-6">
+                    <!-- Contenido del paciente vinculado generado dinámicamente -->
+                </div>
+            </section>
+
         </div>
     </main>
 
@@ -635,6 +647,19 @@ Pagos de cuotas</h4>
         };
 
         let activeRole = "Administrador";
+        let activeUserId = 1;
+        const roleProfiles = {
+            "Administrador": { userId: 1, name: "Dra. Claudia Morales", displayRole: "Administrador", initials: "CM" },
+            "Médico": { userId: 2, name: "Dr. Roberto Silva", displayRole: "Médico Adictólogo", initials: "RS" },
+            "Psicólogo": { userId: 3, name: "Lic. Mariana Ríos", displayRole: "Psicóloga Clínica", initials: "MR" },
+            "Tutor": { userId: 4, name: "Ing. Carlos Mendoza", displayRole: "Tutor Familiar", initials: "CM" }
+        };
+        const roleScreens = {
+            "Administrador": ["screen-2", "screen-3", "screen-4", "screen-5", "screen-6", "screen-7"],
+            "Médico": ["screen-2", "screen-5", "screen-6"],
+            "Psicólogo": ["screen-2", "screen-5", "screen-6"],
+            "Tutor": ["screen-8"]
+        };
         let chartOccupancy = null;
         let chartPayments = null;
 
@@ -661,17 +686,16 @@ Pagos de cuotas</h4>
         function handleLogin(e) {
             e.preventDefault();
             const val = document.getElementById('login-user-select').value;
-            
-            if(val === 'admin') { activeRole = "Administrador"; updateUserInfo("Dra. Claudia Morales", "Administrador", "CM"); }
-            if(val === 'medico') { activeRole = "Médico"; updateUserInfo("Dr. Roberto Silva", "Médico Adictólogo", "RS"); }
-            if(val === 'psicologo') { activeRole = "Psicólogo"; updateUserInfo("Lic. Mariana Ríos", "Psicóloga Clínica", "MR"); }
-            if(val === 'tutor') { activeRole = "Tutor"; updateUserInfo("Ing. Carlos Mendoza", "Tutor Familiar", "CM"); }
+            const loginRoles = {
+                admin: "Administrador",
+                medico: "Médico",
+                psicologo: "Psicólogo",
+                tutor: "Tutor"
+            };
 
+            setActiveRole(loginRoles[val]);
             document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('role-selector').value = activeRole;
-            applyRolePermissions();
             showToast(`Bienvenido/a. Sesión iniciada con rol de ${activeRole}`);
-            navigateTo('screen-2');
         }
 
         function logout() {
@@ -679,9 +703,20 @@ Pagos de cuotas</h4>
         }
 
         function changeRole(newRole) {
-            activeRole = newRole;
-            applyRolePermissions();
+            setActiveRole(newRole);
             showToast(`Simulador: Cambiado a Rol de ${activeRole}`);
+        }
+
+        function setActiveRole(role) {
+            const profile = roleProfiles[role];
+            if(!profile) return;
+
+            activeRole = role;
+            activeUserId = profile.userId;
+            document.getElementById('role-selector').value = role;
+            updateUserInfo(profile.name, profile.displayRole, profile.initials);
+            updateRoleVisuals(activeRole);
+            applyRolePermissions();
         }
 
         function updateRoleVisuals(role) {
@@ -705,10 +740,27 @@ Pagos de cuotas</h4>
 
         function applyRolePermissions() {
             updateRoleVisuals(activeRole);
+            const allowedScreens = roleScreens[activeRole] || roleScreens["Administrador"];
+
+            ["screen-2", "screen-3", "screen-4", "screen-5", "screen-6", "screen-7", "screen-8"].forEach(screenId => {
+                const navButton = document.getElementById(`nav-${screenId}`);
+                if(navButton) navButton.classList.toggle('hidden', !allowedScreens.includes(screenId));
+            });
+
+            document.getElementById('nav-heading').innerText = activeRole === "Tutor" ? "Portal familiar" : "Módulos del Sistema";
+            document.querySelector('#nav-screen-2 span').innerText = activeRole === "Administrador" ? "2. Directorio de Pacientes" : "Mis pacientes";
+            document.querySelector('#nav-screen-5 span').innerText = "Bitácoras clínicas";
+            document.querySelector('#nav-screen-6 span').innerText = "Expedientes clínicos";
+
+            if(activeRole === "Tutor") renderFamilyDashboard();
+            navigateTo(allowedScreens[0]);
         }
 
         // --- NAVEGACIÓN SPA ---
         function navigateTo(screenId) {
+            const allowedScreens = roleScreens[activeRole] || roleScreens["Administrador"];
+            if(!allowedScreens.includes(screenId)) screenId = allowedScreens[0];
+
             // Ocultar todas las pantallas
             document.querySelectorAll('.screen-content').forEach(s => s.classList.add('hidden'));
             
@@ -733,13 +785,81 @@ Pagos de cuotas</h4>
                 'screen-4': ['Gestión de Internamiento', 'Registro del paciente, tutor y cuota'],
                 'screen-5': ['Bitácora y Notas Clínicas', 'Registro de evolución y observaciones clínicas'],
                 'screen-6': ['Historial Clínico y Línea del Tiempo', 'Antecedentes y evoluciones del paciente'],
-                'screen-7': ['Reportes Administrativos y Financieros', 'Resumen de cuotas, ocupación y pagos']
+                'screen-7': ['Reportes Administrativos y Financieros', 'Resumen de cuotas, ocupación y pagos'],
+                'screen-8': ['Portal Familiar', 'Seguimiento general y cuotas del paciente vinculado']
             };
 
             if(titles[screenId]) {
                 document.getElementById('current-screen-title').innerText = titles[screenId][0];
                 document.getElementById('current-screen-desc').innerText = titles[screenId][1];
             }
+        }
+
+        function renderFamilyDashboard() {
+            const dashboard = document.getElementById('family-dashboard');
+            const patient = mockData.patients.find(p => p.tutorId === activeUserId);
+
+            if(!patient) {
+                dashboard.innerHTML = `
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-900">No hay un paciente vinculado</h3>
+                        <p class="text-sm text-slate-600 mt-2">Contacta a la clínica para asociar tu cuenta familiar con un paciente.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const record = mockData.clinicalRecords[patient.id];
+            const phases = record ? record.phases : [];
+            const payments = mockData.payments.filter(p => p.patientName === patient.name);
+            const phaseCards = phases.map(phase => `
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <p class="font-bold text-slate-800 text-sm">${phase.name}</p>
+                    <p class="text-xs text-teal-700 font-semibold mt-2">${phase.status}</p>
+                    <div class="w-full bg-slate-200 rounded-full h-2 mt-3">
+                        <div class="bg-teal-600 h-2 rounded-full" style="width: ${phase.progress}"></div>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">${phase.progress} de avance</p>
+                </div>
+            `).join('');
+            const paymentRows = payments.map(payment => `
+                <tr class="border-t border-slate-100">
+                    <td class="px-4 py-3 text-slate-700">${payment.dueDate}</td>
+                    <td class="px-4 py-3 font-semibold text-slate-800">$${payment.amount.toLocaleString()} MXN</td>
+                    <td class="px-4 py-3 ${payment.status === "Pagado" ? "text-emerald-700" : "text-amber-700"} font-semibold">${payment.status}</td>
+                </tr>
+            `).join('');
+
+            dashboard.innerHTML = `
+                <section class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs text-teal-700 font-bold uppercase tracking-wider">Paciente vinculado a tu cuenta</p>
+                    <h3 class="text-xl font-extrabold text-slate-900 mt-2">${patient.name}</h3>
+                    <p class="text-sm text-slate-600 mt-2">Estado del tratamiento: <strong>${patient.status}</strong></p>
+                </section>
+                <section class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div>
+                        <h3 class="font-bold text-slate-900">Avance general del tratamiento</h3>
+                        <p class="text-xs text-slate-500 mt-1">Consulta el estado de cada fase de seguimiento.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        ${phaseCards || '<p class="text-sm text-slate-500">Aún no hay fases de tratamiento registradas.</p>'}
+                    </div>
+                </section>
+                <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-5">
+                        <h3 class="font-bold text-slate-900">Cuotas de este paciente</h3>
+                        <p class="text-xs text-slate-500 mt-1">Solo se muestran los pagos asociados al paciente vinculado.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-slate-500 uppercase font-bold">
+                                <tr><th class="px-4 py-3">Fecha límite</th><th class="px-4 py-3">Monto</th><th class="px-4 py-3">Estatus</th></tr>
+                            </thead>
+                            <tbody>${paymentRows || '<tr><td class="px-4 py-3 text-slate-500" colspan="3">No hay cuotas registradas.</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </section>
+            `;
         }
 
         function toggleMobileSidebar() {
